@@ -78,7 +78,7 @@ The leap from a tank chassis to a hoverboard-based design wasn’t trivial, but 
 - **Driving Experience:** The car can move outdoors, though it’s still evolving.
 - **Practical Learning:** Building this forced me to apply many cybernetics/robotics concepts—power distribution, signal processing, sensor feedback, and more.
 
-> **HoverCar ready to test** ![HoverCar ready to test](./Images/HoverCar_test_ready.jpg)
+> **HoverCar ready to test (weatherproofing not yet implemented):** ![HoverCar ready to test](./Images/HoverCar_test_ready.jpg)
 
 ## Electronics & Components
 
