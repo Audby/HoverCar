@@ -47,7 +47,9 @@ Next, I bought a **tank chassis** equipped with 12V motors. This allowed me to e
   - **Crucial Lesson:** A common ground (GND) is absolutely necessary.
   - Lots of soldering and troubleshooting to ensure the motor drivers responded correctly.
 
-> **Pictures:** Insert tank chassis images here, highlighting motor drivers and wiring.
+> **Pictures:**
+> ![HoverCar Prototype](.Images/ZeusCar.heic)
+
 
 
 ## Final Stage: The HoverCar
