@@ -11,8 +11,7 @@ This repository showcases an electric “HoverCar” project, built by repurposi
 6. [Electronics & Components](#electronics--components)
 7. [Software & Control](#software--control)
 8. [Future Plans](#future-plans)
-9. [Media & Demonstrations](#media--demonstrations)
-10. [License](#license)
+9. [Acknowledgements](#acknowledgements)
 
 ---
 
@@ -104,10 +103,10 @@ The leap from a tank chassis to a hoverboard-based design wasn’t trivial, but 
 - **Add Sensors:** Incorporate ultrasound, LiDAR, or camera modules for autonomous features.
 - **Robot Arm:** Potentially build and mount a robotic manipulator on top for actual tasks.
 
----
+## Acknowledgements
 
 - Thanks to open-source communities whose hoverboard firmware solutions I relied on. Particularly:
-- https://github.com/rodneybakiskan/ps5-esp32
-- https://github.com/flo199213/Hoverboard-Firmware-Hack-Gen2
-- https://github.com/RoboDurden/Hoverboard-Firmware-Hack-Gen2.x-GD32/tree/main
+  - https://github.com/rodneybakiskan/ps5-esp32
+  - https://github.com/flo199213/Hoverboard-Firmware-Hack-Gen2
+  - https://github.com/RoboDurden/Hoverboard-Firmware-Hack-Gen2.x-GD32/tree/main
 
