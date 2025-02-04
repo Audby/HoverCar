@@ -22,6 +22,8 @@ The **HoverCar** began as a quest to build something bigger and more functional 
 
 > **Key takeaway:** The knowledge I gained from smaller projects (Zeus car and tank chassis) carried over to this large-scale build, though I still encountered unexpected challenges in firmware flashing, wiring, signal conversion, and more.
 
+![HoverCar test drive](./Images/HoverCar_test_gif.gif)
+
 ## Background and Motivation
 
 I'm a student of cybernetics and robotics who loves building practical projects to supplement theoretical knowledge. This project is a playground to learn more about motor control, firmware development, sensor integration, and wireless communication—while also having a blast driving around on a custom electric vehicle.
@@ -35,7 +37,7 @@ I started with a mini-robot known as the **Zeus Car**, which came as a complete 
 - **Goal:** Learn how to manipulate sensor data and motor output in real-time. I succeeded in reading sensor data on my computer while controlling the car.
 - **Limitations:** The motors (5V) couldn’t carry any significant load, but the project was a great introduction to microcontroller basics (PWM signals, RX/TX communication, battery management, and general wiring).
 
-> **Pictures:** Insert any photos of the Zeus Car here showing wiring, modifications, or the controller setup.
+> **Pictures:** ![Zeus Car](./Images/ZeusCar.jpeg)
 
 ## Scaling Up: Tank Chassis
 
@@ -47,8 +49,7 @@ Next, I bought a **tank chassis** equipped with 12V motors. This allowed me to e
   - **Crucial Lesson:** A common ground (GND) is absolutely necessary.
   - Lots of soldering and troubleshooting to ensure the motor drivers responded correctly.
 
-> **Pictures:**
-> ![HoverCar Prototype](.Images/ZeusCar.heic)
+> **Pictures:** ![Tank chassis test drive](./Images/Tank_gif.gif)
 
 
 
