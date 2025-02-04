@@ -37,7 +37,7 @@ I started with a mini-robot known as the **Zeus Car**, which came as a complete 
 - **Goal:** Learn how to manipulate sensor data and motor output in real-time. I succeeded in reading sensor data on my computer while controlling the car.
 - **Limitations:** The motors (5V) couldn’t carry any significant load, but the project was a great introduction to microcontroller basics (PWM signals, RX/TX communication, battery management, and general wiring).
 
-> **Base Zeus Car:** ![Zeus Car](./Images/ZeusCar.jpeg)
+> **Base Zeus Car:** ![Zeus Car base](./Images/ZeusCar.jpeg)
 
 ## Scaling Up: Tank Chassis
 
@@ -49,7 +49,7 @@ Next, I bought a **tank chassis** equipped with 12V motors. This allowed me to e
   - **Crucial Lesson:** A common ground (GND) is absolutely necessary.
   - Lots of soldering and troubleshooting to ensure the motor drivers responded correctly.
 
-> **Tank Chassis Test Drive** ![Tank chassis test drive](./Images/Tank_gif.gif)
+> **Tank Chassis Test Drive** ![Tank test drive](./Images/Tank_gif.gif)
 
 ## Final Stage: The HoverCar
 
@@ -69,11 +69,17 @@ The leap from a tank chassis to a hoverboard-based design wasn’t trivial, but 
    - Used an **ESP32** for Bluetooth, referencing open-source libraries and examples.
    - Forwarded the controller inputs to the Arduino for the final motor commands.
 
+> **Pot-based ESC** ![Pot-based ESC](./Images/Pot_based_ESC.jpeg)
+
+> **HoverCar build process** ![HoverCar build process](./Images/Hovercar_build_setup.jpeg)
+
 ### Frame and Finishing Touches
 
 - **Frame Construction:** Used wooden planks for a base, adding some basic weatherproofing.
 - **Driving Experience:** The car can move outdoors, though it’s still evolving.
 - **Practical Learning:** Building this forced me to apply many cybernetics/robotics concepts—power distribution, signal processing, sensor feedback, and more.
+
+> **HoverCar ready to test** ![HoverCar ready to test](./Images/HoverCar_test_ready.jpg)
 
 ## Electronics & Components
 
