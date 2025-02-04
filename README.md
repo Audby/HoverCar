@@ -37,7 +37,7 @@ I started with a mini-robot known as the **Zeus Car**, which came as a complete 
 - **Goal:** Learn how to manipulate sensor data and motor output in real-time. I succeeded in reading sensor data on my computer while controlling the car.
 - **Limitations:** The motors (5V) couldn’t carry any significant load, but the project was a great introduction to microcontroller basics (PWM signals, RX/TX communication, battery management, and general wiring).
 
-> **Pictures:** ![Zeus Car](./Images/ZeusCar.jpeg)
+> **Base Zeus Car:** ![Zeus Car](./Images/ZeusCar.jpeg)
 
 ## Scaling Up: Tank Chassis
 
@@ -49,9 +49,7 @@ Next, I bought a **tank chassis** equipped with 12V motors. This allowed me to e
   - **Crucial Lesson:** A common ground (GND) is absolutely necessary.
   - Lots of soldering and troubleshooting to ensure the motor drivers responded correctly.
 
-> **Pictures:** ![Tank chassis test drive](./Images/Tank_gif.gif)
-
-
+> **Tank Chassis Test Drive** ![Tank chassis test drive](./Images/Tank_gif.gif)
 
 ## Final Stage: The HoverCar
 
@@ -70,8 +68,6 @@ The leap from a tank chassis to a hoverboard-based design wasn’t trivial, but 
    - I wanted to drive the HoverCar wirelessly via a PS5 controller.
    - Used an **ESP32** for Bluetooth, referencing open-source libraries and examples.
    - Forwarded the controller inputs to the Arduino for the final motor commands.
-
-> **Videos:**
 
 ### Frame and Finishing Touches
 
@@ -102,20 +98,10 @@ The leap from a tank chassis to a hoverboard-based design wasn’t trivial, but 
 - **Add Sensors:** Incorporate ultrasound, LiDAR, or camera modules for autonomous features.
 - **Robot Arm:** Potentially build and mount a robotic manipulator on top for actual tasks.
 
-## Media & Demonstrations
-
-> **Insert final build photos and driving footage here.** Highlight the mechanical details (motors, battery placement, wiring) and show the car in motion. Short video clips or animated GIFs could be especially helpful.
-
-## License
-
-This project is provided under an open-source license for educational purposes. Feel free to explore and adapt any of the code, but please note that it’s highly specific to my configuration. Use at your own risk!
-
 ---
 
-### Acknowledgments
-
-- Thanks to open-source communities whose hoverboard firmware solutions I relied on.
-- All the creators of libraries and open-source motor controller code.
-
-**Enjoy exploring the HoverCar project!** If you have questions or suggestions, feel free to open an issue or contact me.
+- Thanks to open-source communities whose hoverboard firmware solutions I relied on. Particularly:
+- https://github.com/rodneybakiskan/ps5-esp32
+- https://github.com/flo199213/Hoverboard-Firmware-Hack-Gen2
+- https://github.com/RoboDurden/Hoverboard-Firmware-Hack-Gen2.x-GD32/tree/main
 
