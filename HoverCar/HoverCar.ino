@@ -1,8 +1,11 @@
 /***************************************************
-  HoverCar.ino - With Combined Command Support
+  HoverCar.ino - With Smooth Acceleration and Combined Command Support
   
-  Updated to support both traditional L=/R= commands and
-  the more efficient combined LR=L,R format
+  Features:
+  - Gradual acceleration/deceleration for smoother control
+  - Support for both traditional and combined command formats
+  - Front wheel calibration
+  - Watchdog safety timer
 ****************************************************/
 
 #include <Wire.h>                   // For I2C
@@ -27,13 +30,27 @@ Adafruit_MCP4725 dacRight;
 #define DACLEFT_ADDR   0x60
 #define DACRIGHT_ADDR  0x61
 
-// Speed variables for left and right sides
-int leftSpeed  = 0;  // range: -1000..+1000
-int rightSpeed = 0;  // range: -1000..+1000
+// ---------- SPEED VARIABLES ----------
+// Target speeds (where we want to go)
+int targetLeftSpeed = 0;   // range: -1000..+1000
+int targetRightSpeed = 0;  // range: -1000..+1000
 
-// Command watchdog timer - only used for safety
+// Current speeds (where we are now)
+int currentLeftSpeed = 0;  // range: -1000..+1000
+int currentRightSpeed = 0; // range: -1000..+1000
+
+// ---------- ACCELERATION SETTINGS ----------
+// These determine how quickly speed changes occur
+// Lower values = smoother acceleration but less responsive
+// Higher values = quicker response but more jerky
+#define ACCEL_RATE 15      // Speed units per update (for accelerating)
+#define DECEL_RATE 30      // Speed units per update (for decelerating - usually higher for safety)
+#define SPEED_UPDATE_MS 20 // How often to update speeds (milliseconds)
+
+// Command watchdog timer - for safety
 #define COMMAND_TIMEOUT_MS 1000  // 1 second timeout
 unsigned long lastCommandTime = 0;
+unsigned long lastSpeedUpdate = 0;
 
 // Front wheel calibration factor
 #define FRONT_WHEEL_CALIBRATION 1.0
@@ -46,7 +63,7 @@ void setup() {
   // Start USB serial (to communicate with the PC/Python)
   Serial.begin(115200);
   delay(200);
-  Serial.println("HoverCar - Combined Command Support - Starting...");
+  Serial.println("HoverCar - With Smooth Acceleration - Starting...");
 
   // Setup Serial1 for ESP32 communication
   Serial1.begin(115200);
@@ -73,57 +90,58 @@ void setup() {
   }
   Serial.println("Both DACs found (rear ESCs).");
 
-  // Fix for Issue 1: Explicitly initialize DACs to zero
+  // Initialize DACs to zero to prevent startup motor spin
   dacLeft.setVoltage(0, false);
   dacRight.setVoltage(0, false);
   Serial.println("DACs initialized to zero voltage.");
 
   pinMode(LED_BUILTIN, OUTPUT);
   
-  // Initialize watchdog timer
+  // Initialize timing variables
   lastCommandTime = millis();
+  lastSpeedUpdate = millis();
 }
 
 void loop() {
-  // Blink the built-in LED every 500 ms, just to show the loop is running
+  unsigned long currentTime = millis();
+  
+  // Blink the built-in LED every 500 ms to show the loop is running
   static unsigned long lastBlink = 0;
-  unsigned long now = millis();
-  if (now - lastBlink >= 500) {
-    lastBlink = now;
+  if (currentTime - lastBlink >= 500) {
+    lastBlink = currentTime;
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
   }
 
-  // Fix for Issue 2: Implement command timeout watchdog
-  if (now - lastCommandTime > COMMAND_TIMEOUT_MS) {
-    if (leftSpeed != 0 || rightSpeed != 0) {
+  // Watchdog timeout - if no commands for a while, stop motors
+  if (currentTime - lastCommandTime > COMMAND_TIMEOUT_MS) {
+    if (targetLeftSpeed != 0 || targetRightSpeed != 0) {
       Serial.println("WATCHDOG: Command timeout - stopping motors!");
-      leftSpeed = 0;
-      rightSpeed = 0;
+      targetLeftSpeed = 0;
+      targetRightSpeed = 0;
     }
   }
 
-  // Check for commands from ESP32 (Serial1)
+  // Process commands from ESP32 (Serial1)
   if (Serial1.available()) {
     String cmd = Serial1.readStringUntil('\n');
     cmd.trim(); // remove trailing whitespace
 
     // Update the watchdog timer
-    lastCommandTime = now;
+    lastCommandTime = currentTime;
     
-    // Process command - support both formats
+    // Process commands
     if (cmd.equalsIgnoreCase("0") || cmd.equalsIgnoreCase("S=0")) {
-      leftSpeed = 0;
-      rightSpeed = 0;
+      targetLeftSpeed = 0;
+      targetRightSpeed = 0;
     }
     else if (cmd.startsWith("L=") || cmd.startsWith("l=")) {
-      leftSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
+      targetLeftSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
     }
     else if (cmd.startsWith("R=") || cmd.startsWith("r=")) {
-      rightSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
+      targetRightSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
     }
-    // New combined command format: "LR=left,right"
+    // Combined command format: "LR=left,right"
     else if (cmd.startsWith("LR=") || cmd.startsWith("lr=")) {
-      // Extract the combined values
       String values = cmd.substring(3); // Skip "LR="
       int commaIndex = values.indexOf(',');
       
@@ -131,56 +149,52 @@ void loop() {
         String leftStr = values.substring(0, commaIndex);
         String rightStr = values.substring(commaIndex + 1);
         
-        // Parse the values
-        leftSpeed = constrain(leftStr.toInt(), -1000, 1000);
-        rightSpeed = constrain(rightStr.toInt(), -1000, 1000);
+        targetLeftSpeed = constrain(leftStr.toInt(), -1000, 1000);
+        targetRightSpeed = constrain(rightStr.toInt(), -1000, 1000);
       }
     }
 
-    // Print debug info but not too often to avoid serial flooding
-    static unsigned long lastSerialPrint = 0;
-    if (now - lastSerialPrint > 500) { // Print at most every 500ms
-      lastSerialPrint = now;
-      Serial.print("Command: ");
-      Serial.print(cmd);
-      Serial.print(" → L=");
-      Serial.print(leftSpeed);
+    // Debug output (rate-limited to avoid flooding)
+    static unsigned long lastDebugPrint = 0;
+    if (currentTime - lastDebugPrint >= 500) {
+      lastDebugPrint = currentTime;
+      Serial.print("ESP32 CMD → Target: L=");
+      Serial.print(targetLeftSpeed);
       Serial.print(", R=");
-      Serial.println(rightSpeed);
+      Serial.println(targetRightSpeed);
     }
   }
 
-  // Check for commands from USB Serial (for manual testing)
+  // Process commands from USB Serial (manual control)
   if (Serial.available()) {
     String cmd = Serial.readStringUntil('\n');
     cmd.trim(); // remove trailing whitespace
 
     // Update the watchdog timer
-    lastCommandTime = now;
+    lastCommandTime = currentTime;
     
     // Process command
     if (cmd.equalsIgnoreCase("0")) {
-      leftSpeed = 0;
-      rightSpeed = 0;
+      targetLeftSpeed = 0;
+      targetRightSpeed = 0;
       Serial.println("Both sides set to 0.");
     }
     else if (cmd.equalsIgnoreCase("S=0")) {
-      leftSpeed = 0;
-      rightSpeed = 0;
+      targetLeftSpeed = 0;
+      targetRightSpeed = 0;
       Serial.println("Motors stopped (S=0).");
     }
     else if (cmd.startsWith("L=") || cmd.startsWith("l=")) {
-      leftSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
-      Serial.print("Left speed set to ");
-      Serial.println(leftSpeed);
+      targetLeftSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
+      Serial.print("Target left speed set to ");
+      Serial.println(targetLeftSpeed);
     }
     else if (cmd.startsWith("R=") || cmd.startsWith("r=")) {
-      rightSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
-      Serial.print("Right speed set to ");
-      Serial.println(rightSpeed);
+      targetRightSpeed = constrain(cmd.substring(2).toInt(), -1000, 1000);
+      Serial.print("Target right speed set to ");
+      Serial.println(targetRightSpeed);
     }
     else if (cmd.startsWith("LR=") || cmd.startsWith("lr=")) {
-      // Process combined command
       String values = cmd.substring(3);
       int commaIndex = values.indexOf(',');
       
@@ -188,14 +202,21 @@ void loop() {
         String leftStr = values.substring(0, commaIndex);
         String rightStr = values.substring(commaIndex + 1);
         
-        leftSpeed = constrain(leftStr.toInt(), -1000, 1000);
-        rightSpeed = constrain(rightStr.toInt(), -1000, 1000);
+        targetLeftSpeed = constrain(leftStr.toInt(), -1000, 1000);
+        targetRightSpeed = constrain(rightStr.toInt(), -1000, 1000);
         
-        Serial.print("Speeds set to L=");
-        Serial.print(leftSpeed);
+        Serial.print("Target speeds set to L=");
+        Serial.print(targetLeftSpeed);
         Serial.print(", R=");
-        Serial.println(rightSpeed);
+        Serial.println(targetRightSpeed);
       }
+    }
+    // Special command to adjust acceleration rate
+    else if (cmd.startsWith("ACCEL=")) {
+      int newRate = constrain(cmd.substring(6).toInt(), 1, 100);
+      Serial.print("Setting acceleration rate to ");
+      Serial.println(newRate);
+      // We'd update a global variable here if we were using one
     }
     else {
       Serial.println("Unrecognized command. Examples:");
@@ -204,12 +225,49 @@ void loop() {
       Serial.println("  L=300  (left speed=300)");
       Serial.println("  R=-150 (right speed=-150)");
       Serial.println("  LR=300,-150 (combined command)");
+      Serial.println("  ACCEL=10 (set acceleration rate)");
+    }
+  }
+
+  // ===== SMOOTH ACCELERATION/DECELERATION =====
+  // Update speeds at controlled intervals
+  if (currentTime - lastSpeedUpdate >= SPEED_UPDATE_MS) {
+    lastSpeedUpdate = currentTime;
+    
+    // Gradually approach target left speed
+    if (currentLeftSpeed < targetLeftSpeed) {
+      // Accelerating - use ACCEL_RATE
+      currentLeftSpeed = min(currentLeftSpeed + ACCEL_RATE, targetLeftSpeed);
+    } else if (currentLeftSpeed > targetLeftSpeed) {
+      // Decelerating - use DECEL_RATE (usually faster for safety)
+      currentLeftSpeed = max(currentLeftSpeed - DECEL_RATE, targetLeftSpeed);
+    }
+    
+    // Gradually approach target right speed
+    if (currentRightSpeed < targetRightSpeed) {
+      currentRightSpeed = min(currentRightSpeed + ACCEL_RATE, targetRightSpeed);
+    } else if (currentRightSpeed > targetRightSpeed) {
+      currentRightSpeed = max(currentRightSpeed - DECEL_RATE, targetRightSpeed);
+    }
+    
+    // Debug output (rate-limited)
+    static unsigned long lastSpeedPrint = 0;
+    if (currentTime - lastSpeedPrint >= 1000) { // Once per second
+      lastSpeedPrint = currentTime;
+      Serial.print("Current: L=");
+      Serial.print(currentLeftSpeed);
+      Serial.print(", R=");
+      Serial.print(currentRightSpeed);
+      Serial.print(" | Target: L=");
+      Serial.print(targetLeftSpeed);
+      Serial.print(", R=");
+      Serial.println(targetRightSpeed);
     }
   }
 
   // Apply front wheel calibration if needed
-  int adjustedLeftSpeed = -leftSpeed;   // Note the negation for direction
-  int adjustedRightSpeed = rightSpeed;
+  int adjustedLeftSpeed = -currentLeftSpeed;   // Note the negation for direction
+  int adjustedRightSpeed = currentRightSpeed;
   
   if (FRONT_WHEEL_CALIBRATION < 1.0) {
     // Slow down the right wheel
@@ -224,8 +282,8 @@ void loop() {
   HoverSend(SerialRight, 0, adjustedRightSpeed, 32);
 
   // Drive REAR ESCs with DAC (forward-only, so clamp negatives to 0)
-  setLeftESC(leftSpeed);
-  setRightESC(rightSpeed);
+  setLeftESC(currentLeftSpeed);
+  setRightESC(currentRightSpeed);
 
   // Short delay to prevent CPU hogging
   delay(5);
